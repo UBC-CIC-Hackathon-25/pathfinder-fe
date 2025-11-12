@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Upload, User, Mail, Calendar, Building2, Heart, Target, Clock } from "lucide-react";
 
+const API_BASE = "http://127.0.0.1:8000";
+
 export default function UserLoginFlow() {
     const [formData, setFormData] = useState({
         name: "",
@@ -15,6 +17,7 @@ export default function UserLoginFlow() {
 
     const [errors, setErrors] = useState({});
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -22,7 +25,6 @@ export default function UserLoginFlow() {
             ...prev,
             [name]: value,
         }));
-        // Clear error when user starts typing
         if (errors[name]) {
             setErrors((prev) => ({
                 ...prev,
@@ -34,7 +36,8 @@ export default function UserLoginFlow() {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            if (file.type === "application/pdf" || file.type.includes("document")) {
+            const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+            if (allowedTypes.includes(file.type)) {
                 setFormData((prev) => ({
                     ...prev,
                     resume: file,
@@ -46,7 +49,7 @@ export default function UserLoginFlow() {
             } else {
                 setErrors((prev) => ({
                     ...prev,
-                    resume: "Please upload a PDF or document file",
+                    resume: "Please upload a PDF or Word document",
                 }));
             }
         }
@@ -70,11 +73,41 @@ export default function UserLoginFlow() {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (validateForm()) {
-            console.log("Form submitted:", formData);
+        if (!validateForm()) return;
+
+        setLoading(true);
+
+        try {
+            // Create FormData to send all data including file in one request
+            const formDataToSend = new FormData();
+            formDataToSend.append("name", formData.name);
+            formDataToSend.append("email", formData.email);
+            formDataToSend.append("year", formData.year);
+            formDataToSend.append("faculty", formData.faculty);
+            formDataToSend.append("interests", formData.interests);
+            formDataToSend.append("end_goal", formData.endGoal);
+            formDataToSend.append("timeline", formData.timeline);
+
+            if (formData.resume) {
+                formDataToSend.append("resume", formData.resume);
+            }
+
+            const response = await fetch(`${API_BASE}/register`, {
+                method: "POST",
+                body: formDataToSend,
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || "Registration failed");
+            }
+
+            const result = await response.json();
+            console.log("Registration successful:", result);
+
             setSubmitted(true);
 
             // Reset form after 3 seconds
@@ -91,6 +124,14 @@ export default function UserLoginFlow() {
                     resume: null,
                 });
             }, 3000);
+        } catch (err) {
+            console.error("Registration error:", err);
+            setErrors((prev) => ({
+                ...prev,
+                submit: err.message || "Something went wrong. Please try again.",
+            }));
+        } finally {
+            setLoading(false);
         }
     };
 
