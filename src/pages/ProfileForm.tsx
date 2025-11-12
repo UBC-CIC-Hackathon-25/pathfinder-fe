@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Upload, User, Mail, Calendar, Building2, Heart, Target, Clock, Share2 } from "lucide-react";
 
 const API_BASE = "http://127.0.0.1:8000";
@@ -29,9 +29,9 @@ const createInitialFormState = (): ProfileFormState => ({
 export default function ProfileFormPage() {
     const [formData, setFormData] = useState<ProfileFormState>(createInitialFormState);
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [registeredName, setRegisteredName] = useState("");
+
+    const navigate = useNavigate();
 
     const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = event.target;
@@ -122,14 +122,17 @@ export default function ProfileFormPage() {
             const result = await response.json();
             console.log("Registration successful:", result);
 
-            setRegisteredName(formData.name);
-            setSubmitted(true);
+            // Store user_id for the network page
+            if (result.user_id) {
+                sessionStorage.setItem("user_id", String(result.user_id));
+            }
 
-            setTimeout(() => {
-                setSubmitted(false);
-                setFormData(createInitialFormState());
-                setRegisteredName("");
-            }, 3000);
+            // Optional: reset form before navigation
+            setFormData(createInitialFormState());
+            setErrors({});
+
+            // 🔥 Navigate to /network after success
+            navigate("/network");
         } catch (error) {
             console.error("Registration error:", error);
             setErrors((prev) => ({
@@ -141,42 +144,13 @@ export default function ProfileFormPage() {
         }
     };
 
-    if (submitted) {
-        return (
-            <div className="min-h-[calc(100vh-73px)] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center space-y-4">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Registration Complete!</h2>
-                        <p className="text-gray-600">
-                            Welcome, {registeredName || "new Pathfinder"}! Your profile has been created successfully.
-                        </p>
-                    </div>
-                    <Link
-                        to="/network"
-                        className="inline-flex items-center justify-center gap-2 rounded-full border border-indigo-200 px-5 py-2 text-sm font-semibold text-indigo-600 hover:bg-indigo-50"
-                    >
-                        Explore the network
-                        <Share2 className="h-4 w-4" />
-                    </Link>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 py-12 px-4">
             <div className="mx-auto max-w-3xl space-y-6">
                 <header className="text-center space-y-3">
                     <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-500">Pathfinder</p>
                     <h1 className="text-4xl font-bold text-slate-900">Create Your Profile</h1>
-                    <p className="text-lg text-slate-600">
-                        Tell us about yourself so we can align you with opportunities across the Pathfinder network.
-                    </p>
+                    <p className="text-lg text-slate-600">Tell us about yourself so we can align you with opportunities across the Pathfinder network.</p>
                 </header>
 
                 <section className="bg-white rounded-2xl shadow-xl p-8 border border-white/70">
@@ -352,9 +326,7 @@ export default function ProfileFormPage() {
                 <section className="rounded-2xl border border-indigo-100 bg-white/70 p-6 text-center shadow">
                     <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-500">Next</p>
                     <h2 className="mt-2 text-2xl font-semibold text-slate-900">See the Network Graph</h2>
-                    <p className="mt-1 text-sm text-slate-600">
-                        Jump to the dedicated graph page to explore how Pathfinder profiles connect to curated events.
-                    </p>
+                    <p className="mt-1 text-sm text-slate-600">Jump to the dedicated graph page to explore how Pathfinder profiles connect to curated events.</p>
                     <Link
                         to="/network"
                         className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-300/60 hover:bg-indigo-500"
