@@ -12,7 +12,7 @@ type ChatMessage = {
 
 const quickPrompts = ["What skills should I focus on for my career goal?", "Which events are most critical for my timeline?", "How can I optimize my learning path?"];
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://35.86.86.5:8000";
 
 // User start node component
 function UserStartNode({ data }: NodeProps) {
