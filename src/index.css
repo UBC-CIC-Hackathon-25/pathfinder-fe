@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+.react-flow__node {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
