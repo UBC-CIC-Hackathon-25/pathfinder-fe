@@ -2,7 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Upload, User, Mail, Calendar, Building2, Heart, Target, Clock, Share2 } from "lucide-react";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "http://35.86.86.5:8000";
 
 type ProfileFormState = {
     name: string;
